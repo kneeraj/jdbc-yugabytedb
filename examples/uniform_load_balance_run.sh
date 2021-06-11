@@ -15,6 +15,12 @@ finish() {
   ##kill the java app if exists
   kill -9 $2 >> yb-ctl.log 2>&1
 
+  #deleting the temporary files
+  rm -rf .jdbc_example_app_checker  
+  rm -rf .jdbc_example_app_checker2
+  rm -rf .jdbc_example_app_checker3 
+  rm -rf .notify_shell_script
+
   exit 1
 }
 
@@ -25,7 +31,7 @@ pauseScript() {
     # echo "script is paused"
     while [[ $(cat $1) != $2 ]]
     do
-      #nothing
+      dummy=1
     done
     # echo "script is continued"
   }

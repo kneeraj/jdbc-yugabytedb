@@ -11,15 +11,15 @@ import java.sql.*;
 import java.util.*;
 
 public class TopologyAwareLoadBalance {
-  private static String controlUrl = "";
+  private static String controlUrl = "", controlUrlWithPlacement;
   private static int debug_flag=0;
   private static HikariDataSource hikariDataSource;
   static Scanner scanner = new Scanner(System.in);
 
   public static void main(String[] args) {
     try {
-      if(debug_flag==1)
-        args = new String[] {"1", "1", "6"};
+      if (debug_flag == 1)
+        args = new String[]{"1", "1", "6"};
 
       String VERBOSE = args[0];
       String INTERACTIVE = args[1];
@@ -29,8 +29,10 @@ public class TopologyAwareLoadBalance {
 
       controlUrl = "jdbc:postgresql://" + controlHost
         + ":" + controlPort + "/yugabyte?user=yugabyte&password=yugabyte&load-balance=true";
+      controlUrlWithPlacement = "jdbc:postgresql://" + controlHost
+        + ":" + controlPort + "/yugabyte?user=yugabyte&password=yugabyte&load-balance=true&topology-keys=region1.zone1";
 
-      if(VERBOSE.equals("1")) {
+      if (VERBOSE.equals("1")) {
         System.out.println("VERBOSE = " + (VERBOSE.equals("1") ? "True" : "False") +
           " and INTERACTIVE = " + (INTERACTIVE.equals("1") ? "True" : "False"));
         System.out.println("Setting up the connection pool.......");
@@ -45,7 +47,7 @@ public class TopologyAwareLoadBalance {
   }
 
   private static void testUsingHikariPool(String poolName, String lbpropvalue, String lookupKey,
-                                          String hostName, String port, String numConnections, String VERBOSE, String INTERACTIVE)  {
+                                          String hostName, String port, String numConnections, String VERBOSE, String INTERACTIVE) {
     try {
       String ds_yb = "com.yugabyte.ysql.YBClusterAwareDataSource";
 
@@ -76,16 +78,16 @@ public class TopologyAwareLoadBalance {
 
       //running multiple threads concurrently
       runSqlQueriesOnMultipleThreads();
-      Thread.sleep(5000);
+      Thread.sleep(2000);
 
       LoadBalanceProperties.CONNECTION_MANAGER_MAP.get(lookupKey).printHostToConnMap();
 
-      if(VERBOSE.equals("1")) {
+      if (VERBOSE.equals("1")) {
         System.out.println("Verify the connections on the server side using your browser");
         System.out.println("For example, you can \"127.0.0.1:13000/rpcz\"" + " and similarly others...");
       }
 
-      if(INTERACTIVE.equals("1")) {
+      if (INTERACTIVE.equals("1")) {
         interact();
       }
 
@@ -93,7 +95,7 @@ public class TopologyAwareLoadBalance {
 
       continueScript("flag1");
       File file = new File(".jdbc_example_app_checker");
-      while (file.exists()==false) ;
+      while (file.exists() == false) ;
 //      System.out.println("=====================first file found================");
 
       makeSomeNewConnections(7);
@@ -103,21 +105,21 @@ public class TopologyAwareLoadBalance {
       continueScript("flag2");
 //      System.out.println("================second file finding=======================");
       file = new File(".jdbc_example_app_checker2");
-      while (file.exists()==false) ;
+      while (file.exists() == false) ;
 
 //      System.out.println("================second file found=======================");
 
-      LoadBalanceProperties.CONNECTION_MANAGER_MAP.get(lookupKey).printHostToConnMap(); //for debugging
+//      LoadBalanceProperties.CONNECTION_MANAGER_MAP.get(lookupKey).printHostToConnMap(); //for debugging
 
       makeSomeNewConnections(4);
       Thread.sleep(5000);
       LoadBalanceProperties.CONNECTION_MANAGER_MAP.get(lookupKey).printHostToConnMap();
 
-      if(VERBOSE.equals("1")) {
+      if (VERBOSE.equals("1")) {
         System.out.println("Verify the connections on the server side using your browser");
         System.out.println("For example, you can \"127.0.0.1:13000/rpcz\"" + " and similarly others...");
       }
-      if(INTERACTIVE.equals("1")) {
+      if (INTERACTIVE.equals("1")) {
         interact();
       }
 
@@ -125,13 +127,16 @@ public class TopologyAwareLoadBalance {
 
       file = new File(".jdbc_example_app_checker3");
 //      System.out.println("=====================Ending the java app================");
-      while (file.exists()==false);
-      System.out.println("=====================Java app closed================");
+      while (file.exists() == false) ;
 
-//      hikariDataSource.close();
-    }catch (SQLException throwables) {
+      System.out.println("Closing the java app...");
+      hikariDataSource.close();
+      Thread.sleep(1000);
+    } catch (SQLException throwables) {
       throwables.printStackTrace();
     } catch (InterruptedException e) {
+      e.printStackTrace();
+    } catch (IOException e) {
       e.printStackTrace();
     }
   }
@@ -152,7 +157,7 @@ public class TopologyAwareLoadBalance {
       statement.executeUpdate("INSERT INTO AGENTS VALUES ('A012', 'Lucida', 'San Jose', '0.12', '044-52981425')");
       statement.executeUpdate("INSERT INTO AGENTS VALUES ('A005', 'Anderson', 'Brisban', '0.13', '045-21447739' )");
       statement.executeUpdate("INSERT INTO AGENTS VALUES ('A001', 'Subbarao', 'Bangalore', '0.14', '077-12346674')");
-    }catch (SQLException throwables) {
+    } catch (SQLException throwables) {
       System.out.println("Exception occured at createTable function");
       throwables.printStackTrace();
     }
@@ -205,10 +210,10 @@ public class TopologyAwareLoadBalance {
           Connection connection = hikariDataSource.getConnection();
           runSqlQueriesUsingHikariPoolConnections(connection);
           connection.close();
-          LoadBalanceProperties.CONNECTION_MANAGER_MAP.get("region1.zone1").refresh(connection);
         }
       }
       catch (SQLException throwables) {
+        System.out.println("Exception occured at ConcurrentQueriesClass, SQLStateCode" + throwables.getSQLState());
         throwables.printStackTrace();
       }
     }
@@ -219,15 +224,13 @@ public class TopologyAwareLoadBalance {
     System.out.println("ADDING " + new_connections + " New Connections..........");
     try {
       for(int i=1; i<=new_connections; i++) {
-        Connection connection = DriverManager.getConnection(controlUrl);
+        Connection connection = DriverManager.getConnection(controlUrlWithPlacement);
         runSqlQueriesUsingHikariPoolConnections(connection);
       }
 
     } catch (SQLException throwables) {
       throwables.printStackTrace();
     }
-
-
   }
 
   private static void continueScript(String flagValue) {
@@ -241,8 +244,10 @@ public class TopologyAwareLoadBalance {
     }
   }
 
-  static void interact() throws InterruptedException {
+  static void interact() throws InterruptedException, IOException {
     System.out.println("Press any key to continue...");
+//    System.in.read();
+//    scanner.nextLine();
     Thread.sleep(5000);
   }
 

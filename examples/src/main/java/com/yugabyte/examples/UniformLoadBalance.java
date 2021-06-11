@@ -78,7 +78,9 @@ public class UniformLoadBalance {
       runSqlQueriesOnMultipleThreads();
       Thread.sleep(10000);
 
+      System.out.print("Initially when started the pool with 6 connections, ");
       LoadBalanceProperties.CONNECTION_MANAGER_MAP.get(lookupKey).printHostToConnMap();
+      System.out.println();
 
       if(VERBOSE.equals("1")) {
         System.out.println("Verify the connections on the server side using your browser");
@@ -97,8 +99,10 @@ public class UniformLoadBalance {
 //      System.out.println("=====================first file found================");
 
       makeSomeNewConnections(7);
-      LoadBalanceProperties.CONNECTION_MANAGER_MAP.get(lookupKey).printHostToConnMap();
 
+      System.out.print("After adding 7 new connections, ");
+      LoadBalanceProperties.CONNECTION_MANAGER_MAP.get(lookupKey).printHostToConnMap();
+      System.out.println();
 
       continueScript("flag2");
 //      System.out.println("================second file finding=======================");
@@ -106,11 +110,14 @@ public class UniformLoadBalance {
 
 //      System.out.println("================second file found=======================");
 
-      LoadBalanceProperties.CONNECTION_MANAGER_MAP.get(lookupKey).printHostToConnMap(); //for debugging
+//      LoadBalanceProperties.CONNECTION_MANAGER_MAP.get(lookupKey).printHostToConnMap(); //for debugging
 
       makeSomeNewConnections(4);
       Thread.sleep(5000);
+
+      System.out.print("After taking down one server and adding 4 new connections, ");
       LoadBalanceProperties.CONNECTION_MANAGER_MAP.get(lookupKey).printHostToConnMap();
+      System.out.println();
 
       if(VERBOSE.equals("1")) {
         System.out.println("Verify the connections on the server side using your browser");
@@ -123,9 +130,9 @@ public class UniformLoadBalance {
       continueScript("flag3");
 
       pauseApp(".jdbc_example_app_checker3");
-      System.out.println("=====================Java app closed================");
-
-//      hikariDataSource.close();
+      System.out.println("Closing the java app...");
+      hikariDataSource.close();
+      Thread.sleep(1000);
     }catch (SQLException throwables) {
       throwables.printStackTrace();
     } catch (InterruptedException e) {

@@ -85,7 +85,7 @@ $INSTALL_DIR/bin/yb-ctl destroy  > yb-ctl.log 2>&1
 echoSleep "Creating a 3-node, RF-3 cluster with each having some placement information"
 $INSTALL_DIR/bin/yb-ctl --rf 3 create --placement_info "cloud1.region1.zone1,cloud2.region2.zone2,cloud1.region1.zone1" > yb-ctl.log 2>&1
 
-echoSleep "Ammong these, two nodes have same placement than the third one, so we will be using those two for load balancing..."
+echoSleep "Two nodes have same placement than the third one, so we will be using those two for load balancing..."
 
 #deleting the checker file if exists
 rm -rf .jdbc_example_app_checker
@@ -109,14 +109,14 @@ pauseScript ".notify_shell_script" "flag1"
 echoSleep "Adding a node to  cluster with same placement as other two nodes...."
 $INSTALL_DIR/bin/yb-ctl add_node --placement_info "cloud1.region1.zone1" >> yb-ctl.log 2>&1
 
-touch .jdbc_example_app_checker
+touch .jdbc_example_app_checker #resuming the java app
 
 pauseScript ".notify_shell_script" "flag2"
 
 echoSleep "Removing a node from the cluster...."
-$INSTALL_DIR/bin/yb-ctl stop_node 2 >> yb-ctl.log 2>&1
+$INSTALL_DIR/bin/yb-ctl stop_node 3 >> yb-ctl.log 2>&1
 
-touch .jdbc_example_app_checker2
+touch .jdbc_example_app_checker2 #resuming the java app
 
 pauseScript ".notify_shell_script" "flag3"
 SLEEP 2
