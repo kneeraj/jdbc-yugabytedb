@@ -58,8 +58,8 @@ public class TopologyAwareLoadBalancer extends ClusterAwareLoadBalancer {
       }
     }
     LOGGER.log(Level.FINE, "List of servers got {0}", currentServers);
-    System.out.println("List of servers got: " + currentServers);
-    System.out.println();
+//    System.out.println("List of servers got: " + currentServers);
+//    System.out.println();
     return currentServers;
   }
 }
