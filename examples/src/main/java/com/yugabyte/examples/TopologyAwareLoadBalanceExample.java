@@ -10,34 +10,29 @@ import java.io.IOException;
 import java.sql.*;
 import java.util.*;
 
-public class UniformLoadBalance {
-  private static String controlUrl = "";
-  private static int debug_flag=0;
+public class TopologyAwareLoadBalanceExample {
+  private static String controlUrlWithPlacement;
   private static HikariDataSource hikariDataSource;
   static Scanner scanner = new Scanner(System.in);
+  static List<Connection> borrowConnections = new ArrayList<>();
 
   public static void main(String[] args) {
     try {
-      if(debug_flag==1)
-        args = new String[] {"1", "1", "6"};
 
-      String VERBOSE = args[0];
-      String INTERACTIVE = args[1];
+      Boolean VERBOSE = (args[0].equals("1") ? true : false);
+      Boolean INTERACTIVE = (args[1].equals("1") ? true : false);
       String numConnections = "6";
       String controlHost = "127.0.0.1";
       String controlPort = "5433";
 
-      controlUrl = "jdbc:postgresql://" + controlHost
-        + ":" + controlPort + "/yugabyte?user=yugabyte&password=yugabyte&load-balance=true";
+      controlUrlWithPlacement = "jdbc:postgresql://" + controlHost
+        + ":" + controlPort + "/yugabyte?user=yugabyte&password=yugabyte&load-balance=true&topology-keys=region1.zone1";
 
-      if(VERBOSE.equals("1")) {
-        System.out.println("VERBOSE = " + (VERBOSE.equals("1") ? "True" : "False") +
-          " and INTERACTIVE = " + (INTERACTIVE.equals("1") ? "True" : "False"));
-        System.out.println("Setting up the connection pool.......");
-      }
-      Thread.sleep(2000);
+      System.out.println("Setting up the connection pool having 6 connections.......");
 
-      testUsingHikariPool("uniform_load_balance", "true", "simple",
+      Thread.sleep(1000);
+
+      testUsingHikariPool("topology_aware_load_balance", "region1.zone1", "region1.zone1",
         controlHost, controlPort, numConnections, VERBOSE, INTERACTIVE);
     } catch (InterruptedException e) {
       e.printStackTrace();
@@ -45,7 +40,7 @@ public class UniformLoadBalance {
   }
 
   private static void testUsingHikariPool(String poolName, String lbpropvalue, String lookupKey,
-                                         String hostName, String port, String numConnections, String VERBOSE, String INTERACTIVE)  {
+                                          String hostName, String port, String numConnections, Boolean VERBOSE, Boolean INTERACTIVE) {
     try {
       String ds_yb = "com.yugabyte.ysql.YBClusterAwareDataSource";
 
@@ -76,64 +71,41 @@ public class UniformLoadBalance {
 
       //running multiple threads concurrently
       runSqlQueriesOnMultipleThreads();
-      Thread.sleep(10000);
 
-      System.out.print("Initially when started the pool with 6 connections, ");
       LoadBalanceProperties.CONNECTION_MANAGER_MAP.get(lookupKey).printHostToConnMap();
-      System.out.println();
 
-      if(VERBOSE.equals("1")) {
-        System.out.println("Verify the connections on the server side using your browser");
-        System.out.println("For example, you can \"127.0.0.1:13000/rpcz\"" + " and similarly others...");
+      if(INTERACTIVE) {
+        System.out.println("You can verify the connections on the server side using your browser");
+        System.out.println("For example, you can visit \"127.0.0.1:13000/rpcz\"" + " and similarly for others...");
       }
-
-      if(INTERACTIVE.equals("1")) {
-        interact();
-      }
-
-//      System.out.println("=====================first file finding================");
 
       continueScript("flag1");
-//      File file;
       pauseApp(".jdbc_example_app_checker");
-//      System.out.println("=====================first file found================");
 
       makeSomeNewConnections(7);
-
-      System.out.print("After adding 7 new connections, ");
       LoadBalanceProperties.CONNECTION_MANAGER_MAP.get(lookupKey).printHostToConnMap();
-      System.out.println();
+
 
       continueScript("flag2");
-//      System.out.println("================second file finding=======================");
       pauseApp(".jdbc_example_app_checker2");
-
-//      System.out.println("================second file found=======================");
 
 //      LoadBalanceProperties.CONNECTION_MANAGER_MAP.get(lookupKey).printHostToConnMap(); //for debugging
 
       makeSomeNewConnections(4);
-      Thread.sleep(5000);
-
-      System.out.print("After taking down one server and adding 4 new connections, ");
       LoadBalanceProperties.CONNECTION_MANAGER_MAP.get(lookupKey).printHostToConnMap();
-      System.out.println();
 
-      if(VERBOSE.equals("1")) {
-        System.out.println("Verify the connections on the server side using your browser");
-        System.out.println("For example, you can \"127.0.0.1:13000/rpcz\"" + " and similarly others...");
-      }
-      if(INTERACTIVE.equals("1")) {
-        interact();
+      if (INTERACTIVE) {
+        System.out.println("You can verify the connections on the server side using your browser");
+        System.out.println("For example, you can visit \"127.0.0.1:13000/rpcz\"" + " and similarly for others...");
       }
 
       continueScript("flag3");
-
       pauseApp(".jdbc_example_app_checker3");
+
       System.out.println("Closing the java app...");
       hikariDataSource.close();
       Thread.sleep(1000);
-    }catch (SQLException throwables) {
+    } catch (SQLException throwables) {
       throwables.printStackTrace();
     } catch (InterruptedException e) {
       e.printStackTrace();
@@ -156,26 +128,25 @@ public class UniformLoadBalance {
       statement.executeUpdate("INSERT INTO AGENTS VALUES ('A012', 'Lucida', 'San Jose', '0.12', '044-52981425')");
       statement.executeUpdate("INSERT INTO AGENTS VALUES ('A005', 'Anderson', 'Brisban', '0.13', '045-21447739' )");
       statement.executeUpdate("INSERT INTO AGENTS VALUES ('A001', 'Subbarao', 'Bangalore', '0.14', '077-12346674')");
-    }catch (SQLException throwables) {
+    } catch (SQLException throwables) {
       System.out.println("Exception occured at createTable function");
       throwables.printStackTrace();
     }
   }
 
   private static void runSqlQueriesOnMultipleThreads() throws InterruptedException {
-    Thread[] threads = new Thread[4];
-//    System.out.println("==============================Threads started running=========================================");
-    for (int i = 0; i < 4; i++)
+    int nthreads = 6;
+    Thread[] threads = new Thread[nthreads];
+    for (int i = 0; i < nthreads; i++) {
       threads[i] = new Thread(new ConcurrentQueriesClass());
-
-    for (int i = 0; i < 4; i++) {
+    }
+    for (int i = 0; i < nthreads; i++) {
       threads[i].start();
     }
 
-    for (int i = 0; i < 4; i++) {
+    for (int i = 0; i < nthreads; i++) {
       threads[i].join();
     }
-//    System.out.println("==============================Threads execution completed====================================");
   }
 
   private static String [] sqlQueries = new String[] {
@@ -185,7 +156,7 @@ public class UniformLoadBalance {
     "Select WORKING_AREA from AGENTS"
   };
 
-  private static void runSqlQueriesUsingHikariPoolConnections(Connection connection) {
+  private static void runSomeSqlQueries(Connection connection) {
     try {
       for(int i=0; i<sqlQueries.length; i++) {
         Statement statement = connection.createStatement();
@@ -195,7 +166,6 @@ public class UniformLoadBalance {
           cnt += 1;
         }
       }
-      LoadBalanceProperties.CONNECTION_MANAGER_MAP.get("simple").refresh(connection);
     }catch (SQLException throwables) {
       System.out.println("Exception occured at runSqlQueries function");
       throwables.printStackTrace();
@@ -206,32 +176,33 @@ public class UniformLoadBalance {
     @Override
     public void run() {
       try {
+        Connection connection = hikariDataSource.getConnection();
         for (int i = 1; i <= 1000; i++) {
-          Connection connection = hikariDataSource.getConnection();
-          runSqlQueriesUsingHikariPoolConnections(connection);
-          connection.close();
+          runSomeSqlQueries(connection);
         }
       }
       catch (SQLException throwables) {
+        System.out.println("Exception occured at ConcurrentQueriesClass, SQLStateCode" + throwables.getSQLState());
         throwables.printStackTrace();
+      }
+      catch (Exception e) {
       }
     }
   }
 
 
   static void makeSomeNewConnections(int new_connections) {
-    System.out.println("ADDING " + new_connections + " New Connections..........");
+    System.out.println("Creating " + new_connections + " new connections....");
     try {
       for(int i=1; i<=new_connections; i++) {
-        Connection connection = DriverManager.getConnection(controlUrl);
-        runSqlQueriesUsingHikariPoolConnections(connection);
+        Connection connection = DriverManager.getConnection(controlUrlWithPlacement);
+        runSomeSqlQueries(connection);
+        borrowConnections.add(connection);
       }
 
     } catch (SQLException throwables) {
       throwables.printStackTrace();
     }
-
-
   }
 
   private static void continueScript(String flagValue) {
@@ -245,14 +216,13 @@ public class UniformLoadBalance {
     }
   }
 
-  static void interact() throws InterruptedException {
-    System.out.println("Press any key to continue...");
-    Thread.sleep(5000);
-  }
-
   static void pauseApp(String s) {
+    try {
+      System.in.read();
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
     File file = new File(s);
     while (file.exists()==false) ;
   }
-
 }
