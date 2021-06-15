@@ -12,7 +12,7 @@ echoSleep() {
 verbosePrint() {
   if [ $1 -eq 1 ]
   then
-    echo "VERBOSE: $2"
+    echo "$2"
   fi
 }
 
@@ -109,3 +109,4 @@ SLEEP 2
 interact $INTERACTIVE
 
 finish $INSTALL_DIR $jdbc_example_app_pid
+

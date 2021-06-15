@@ -4,23 +4,36 @@
 verbosePrint() {
   if [ $1 -eq 1 ]
   then
-    echo "VERBOSE: $2"
+    echo "$2"
   fi
 }
 
-usage() { echo "Usage: $0 [-v] [-i] -D <path/to/yugabyte/installation/>" 1>&2; exit 1; }              
+usage() {
+          echo
+          echo "Usage: $0 [-v] [-i] [-h] -D <path/to/yugabyte/installation/>" 1>&2;
+          echo 
+          echo "-v - Run in verbose mode"
+          echo "-i - Run in interactive mode"
+          echo "-h - Print the help for this script"
+          echo "-D - The installation directory of YugabyteDB"
+          echo
+          exit 1;
+        }              
 
 VERBOSE=0                                                 
 INTERACTIVE=0                                               
 INSTALL_DIR=""
 
-while getopts ":viD:" o; do                                        
+while getopts ":vihD:" o; do                                        
   case "$o" in                                             
     v)                                                 
       VERBOSE=1                                           
       ;;                                               
     i)                                                 
       INTERACTIVE=1                                         
+      ;;                                               
+    h)                                                 
+      usage
       ;;                                               
     D)                                                 
       INSTALL_DIR=${OPTARG}                                     
