@@ -21,16 +21,9 @@ wget https://downloads.yugabyte.com/yugabyte-2.7.1.1-darwin.tar.gz
 tar xvfz yugabyte-2.7.1.1-darwin.tar.gz && rm && cd yugabyte-2.7.1.1/
 ----
 
-=== 2. Download and start this sample app
-
-[source, sh]
-----
-git clone https://github.com/yugabyte/spring-data-yugabytedb-example.git
-cd spring-data-yugabytedb-example
-mvn clean package
-----
-
-=== 3. Run the sample workload
+=== 2. Run this script for a demo
+Once you have YugaByteDB installed in your system, then for a demo you just need to run this script, it will do everything 
+starting from creating cluster, running the java apps till the destroying of cluster at the end.
 [source, sh]
 ---
 ./run.sh [-v] [-i] -D <path/to/yugabyte/installation/>
@@ -40,7 +33,7 @@ where
  -i is for INTERACTIVE mode
  and `<path/to/yugabyte/installation/>` is the path to the directory where yugabyte was installed in step 1.
 
-For example `./run.sh -v -i -D ~/yugabyte-2.7.1.1/`
+for example: `./run.sh -v -i -D ~/yugabyte-2.7.1.1/`
 
-This script will first show a menu, from where you will have to select the option based on which example you want to run among UniformLoadBalance and TopologyAwareLoadBalance.
+This script will first show you a menu, from where you will have to select the option based on which example you want to run among UniformLoadBalance and TopologyAwareLoadBalance.
 Then the corresponding script will start running with its java app in background.

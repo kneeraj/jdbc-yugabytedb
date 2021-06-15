@@ -61,13 +61,10 @@ VERBOSE=$1
 INTERACTIVE=$2
 INSTALL_DIR=$3
 
-if [ $VERBOSE -eq 1 ]
-then
-  echoSleep "Destroying any exsiting cluster if present..."
-fi
+verbosePrint $VERBOSE "Destroying any exsiting cluster if present..."
 $INSTALL_DIR/bin/yb-ctl destroy  > yb-ctl.log 2>&1
 
-echo "Creating a 3-node, RF-3 cluster"
+echo "Creating a 3-node, RF-3 cluster (live nodes: 1,2,3)"
 $INSTALL_DIR/bin/yb-ctl create --rf 3  >> yb-ctl.log 2>&1
 
 
@@ -93,7 +90,7 @@ pauseScript "flag1"
 
 interact $INTERACTIVE
 
-echoSleep "Adding a node to the cluster...."
+echoSleep "Adding Node-4 to the cluster (live nodes: 1,2,3,4)"
 $INSTALL_DIR/bin/yb-ctl add_node >> yb-ctl.log 2>&1
 
 touch .jdbc_example_app_checker   #resuming the java app
@@ -102,7 +99,7 @@ pauseScript "flag2"
 
 interact $INTERACTIVE
 
-echoSleep "Stopping one node in the cluster...."
+echoSleep "Stopping Node-3 in the cluster (live nodes: 1,2,4)"
 $INSTALL_DIR/bin/yb-ctl stop_node 3 >> yb-ctl.log 2>&1
 
 touch .jdbc_example_app_checker2  #resuming the java app

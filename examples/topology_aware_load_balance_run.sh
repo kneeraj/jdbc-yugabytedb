@@ -61,16 +61,13 @@ VERBOSE=$1
 INTERACTIVE=$2
 INSTALL_DIR=$3
 
-if [ $VERBOSE -eq 1 ]
-then
-  echoSleep "Destroying any existing cluster if present..."
-fi
+verbosePrint $VERBOSE "Destroying any exsiting cluster if present..."
 $INSTALL_DIR/bin/yb-ctl destroy  > yb-ctl.log 2>&1
 
-echoSleep "Creating a 3-node, RF-3 cluster with each having some placement information"
+echoSleep "Creating a 3-node, RF-3 cluster (live nodes: 1,2,3)"
 $INSTALL_DIR/bin/yb-ctl --rf 3 create --placement_info "cloud1.region1.zone1,cloud1.region1.zone1,cloud2.region2.zone2" > yb-ctl.log 2>&1
 
-echoSleep "Two nodes have same placement than the third node, so we will use the two nodes with same placement here..."
+echoSleep "Node-1 and Node-2 have same placement i.e. cloud1.region1.zone1, while Node-3 has cloud2.region2.zone2"
 
 #deleting the checker files if exists
 rm -rf .jdbc_example_app_checker
@@ -92,7 +89,7 @@ pauseScript "flag1"
 
 interact $INTERACTIVE
 
-echoSleep "Adding a node to  cluster with same placement as other two nodes...."
+echoSleep "Adding Node-4 in cloud1.region1.zone1 (live nodes: 1,2,3,4)"
 $INSTALL_DIR/bin/yb-ctl add_node --placement_info "cloud1.region1.zone1" >> yb-ctl.log 2>&1
 
 touch .jdbc_example_app_checker #resuming the java app
@@ -101,7 +98,7 @@ pauseScript "flag2"
 
 interact $INTERACTIVE
 
-echoSleep "Stopping one node in the cluster...."
+echoSleep "Stopping Node-2 in the cluster (live nodes: 1,3,4)"
 $INSTALL_DIR/bin/yb-ctl stop_node 2 >> yb-ctl.log 2>&1
 
 touch .jdbc_example_app_checker2 #resuming the java app
