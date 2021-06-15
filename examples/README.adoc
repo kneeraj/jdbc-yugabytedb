@@ -21,9 +21,17 @@ wget https://downloads.yugabyte.com/yugabyte-2.7.1.1-darwin.tar.gz
 tar xvfz yugabyte-2.7.1.1-darwin.tar.gz && rm && cd yugabyte-2.7.1.1/
 ----
 
-=== 2. Run this script for a demo
-Once you have YugaByteDB installed in your system, then for a demo you just need to run this script, it will do everything 
-starting from creating cluster, running the java apps till the destroying of cluster at the end.
+=== 2. Build the demo examples
+Run `mvn package` before starting the `run` script
+
+=== 3. Run this script for a demo
+Once you have YugaByteDB installed in your system, then for a demo you just need to run this script.
+The script can be run in verbose and/or interactive mode. Check the help of the script to understand
+the usage.
+
+The script starts a cluster, demonstrates different flavors of load balancing through java apps.
+At the end of the demo it destroys the cluster.
+
 [source, sh]
 ---
 ./run.sh [-v] [-i] -D <path/to/yugabyte/installation/>
