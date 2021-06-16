@@ -11,8 +11,8 @@ import java.sql.*;
 import java.util.*;
 
 public class UniformLoadBalanceExample {
-  private static String controlUrl = "";
-  private static HikariDataSource hikariDataSource;
+  public static String controlUrl = "";
+  public static HikariDataSource hikariDataSource;
   static Scanner scanner = new Scanner(System.in);
   static List<Connection> borrowConnections = new ArrayList<>();
 
@@ -37,7 +37,7 @@ public class UniformLoadBalanceExample {
     }
   }
 
-  private static void testUsingHikariPool(String poolName, String lbpropvalue, String lookupKey,
+  public static void testUsingHikariPool(String poolName, String lbpropvalue, String lookupKey,
                                          String hostName, String port, String numConnections, Boolean VERBOSE, Boolean INTERACTIVE)  {
     try {
       String ds_yb = "com.yugabyte.ysql.YBClusterAwareDataSource";
@@ -88,6 +88,11 @@ public class UniformLoadBalanceExample {
       LoadBalanceProperties.CONNECTION_MANAGER_MAP.get(lookupKey).printHostToConnMap();
       System.out.println();
 
+      if(INTERACTIVE) {
+        System.out.println("You can verify the connections on the server side using your browser");
+        System.out.println("For example, you can visit \"127.0.0.1:13000/rpcz\"" + " and similarly for others...");
+      }
+
       continueScript("flag2");
       pauseApp(".jdbc_example_app_checker2");
 
@@ -116,7 +121,7 @@ public class UniformLoadBalanceExample {
     }
   }
 
-  private static void createTableStatements(Connection connection) {
+  public static void createTableStatements(Connection connection) {
     try {
       Statement statement = connection.createStatement();
       statement.execute("DROP TABLE IF EXISTS AGENTS");
@@ -138,11 +143,11 @@ public class UniformLoadBalanceExample {
     }
   }
 
-  private static void runSqlQueriesOnMultipleThreads() throws InterruptedException {
+  public static void runSqlQueriesOnMultipleThreads() throws InterruptedException {
     int nthreads = 6;
     Thread[] threads = new Thread[nthreads];
     for (int i = 0; i < nthreads; i++) {
-      threads[i] = new Thread(new ConcurrentQueriesClass());
+      threads[i] = new Thread(new UniformLoadBalanceExample.ConcurrentQueriesClass());
     }
 
     for (int i = 0; i < nthreads; i++) {
@@ -154,14 +159,14 @@ public class UniformLoadBalanceExample {
     }
   }
 
-  private static String [] sqlQueries = new String[] {
+  public static String [] sqlQueries = new String[] {
     "Select AGENT_NAME, COMMISSION from AGENTS",
     "Select max(COMMISSION) from AGENTS",
     "Select PHONE_NO from AGENTS",
     "Select WORKING_AREA from AGENTS"
   };
 
-  private static void runSomeSqlQueries(Connection connection) {
+  public static void runSomeSqlQueries(Connection connection) {
     try {
       for(int i=0; i<sqlQueries.length; i++) {
         Statement statement = connection.createStatement();
@@ -171,7 +176,6 @@ public class UniformLoadBalanceExample {
           cnt += 1;
         }
       }
-      LoadBalanceProperties.CONNECTION_MANAGER_MAP.get("simple").refresh(connection);
     }catch (SQLException throwables) {
       System.out.println("Exception occured at runSqlQueries function");
       throwables.printStackTrace();
@@ -208,7 +212,7 @@ public class UniformLoadBalanceExample {
     }
   }
 
-  private static void continueScript(String flagValue) {
+  public static void continueScript(String flagValue) {
     FileWriter fileWriter = null;
     try {
       fileWriter = new FileWriter(".notify_shell_script");
