@@ -81,7 +81,7 @@ public class UniformLoadBalanceExample {
         System.out.println("For example, you can visit \"127.0.0.1:13000/rpcz\"" + " and similarly for others...");
       }
 
-      continueScript("flag1");
+      continueScript("continue for next step: adding a node in the cluster");
 
       //it will pause this java app till adding a node is done in cluster by shell script, for user-interaction if required based on the options provided while executing the script
       pauseApp(".jdbc_example_app_checker");
@@ -96,7 +96,7 @@ public class UniformLoadBalanceExample {
         System.out.println("For example, you can visit \"127.0.0.1:13000/rpcz\"" + " and similarly for others...");
       }
 
-      continueScript("flag2");
+      continueScript("continue for next step: stopping a node in the cluster");
 
       //it will pause this java app till stopping a node is done in cluster by shell script and for user-interaction if required based on the options provided while executing the script
       pauseApp(".jdbc_example_app_checker2");
@@ -111,7 +111,7 @@ public class UniformLoadBalanceExample {
         System.out.println("For example, you can visit \"127.0.0.1:13000/rpcz\"" + " and similarly for others...");
       }
 
-      continueScript("flag3");
+      continueScript("continue for next step: perform cleanup like destroying the cluster, removing temp files");
 
       //it will pause this java app for user-interaction if required based on the options provided while executing the script
       pauseApp(".jdbc_example_app_checker3");
