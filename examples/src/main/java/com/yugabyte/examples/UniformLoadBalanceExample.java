@@ -11,15 +11,15 @@ import java.sql.*;
 import java.util.*;
 
 public class UniformLoadBalanceExample {
-  public static String controlUrl = "";
-  public static HikariDataSource hikariDataSource;
-  static Scanner scanner = new Scanner(System.in);
-  static List<Connection> borrowConnections = new ArrayList<>();
+  protected static String controlUrl = "";
+  protected static HikariDataSource hikariDataSource;
+  protected static Scanner scanner = new Scanner(System.in);
+  protected static List<Connection> borrowConnections = new ArrayList<>();
 
   public static void main(String[] args) {
     try {
-      Boolean verbose = (args[0].equals("1") ? true : false);
-      Boolean interactive = (args[1].equals("1") ? true : false);
+      Boolean verbose = args[0].equals("1");
+      Boolean interactive = args[1].equals("1");
       String numConnections = "6";
       String controlHost = "127.0.0.1";
       String controlPort = "5433";
@@ -38,8 +38,8 @@ public class UniformLoadBalanceExample {
     }
   }
 
-  public static void testUsingHikariPool(String poolName, String lbpropvalue, String lookupKey,
-                                         String hostName, String port, String numConnections, Boolean verbose, Boolean interactive) {
+  protected static void testUsingHikariPool(String poolName, String lbpropvalue, String lookupKey,
+                                            String hostName, String port, String numConnections, Boolean verbose, Boolean interactive) {
     try {
       String ds_yb = "com.yugabyte.ysql.YBClusterAwareDataSource";
 
@@ -97,8 +97,6 @@ public class UniformLoadBalanceExample {
       continueScript("flag2");
       pauseApp(".jdbc_example_app_checker2");
 
-//      LoadBalanceProperties.CONNECTION_MANAGER_MAP.get(lookupKey).printHostToConnMap(); //for debugging
-
       makeSomeNewConnections(4);
 
       LoadBalanceProperties.CONNECTION_MANAGER_MAP.get(lookupKey).printHostToConnMap();
@@ -121,7 +119,7 @@ public class UniformLoadBalanceExample {
     }
   }
 
-  public static void performTableCreation(Connection connection) {
+  protected static void performTableCreation(Connection connection) {
     try {
       Statement statement = connection.createStatement();
       statement.execute("DROP TABLE IF EXISTS AGENTS");
@@ -143,7 +141,7 @@ public class UniformLoadBalanceExample {
     }
   }
 
-  public static void runSqlQueriesOnMultipleThreads() throws InterruptedException {
+  protected static void runSqlQueriesOnMultipleThreads() throws InterruptedException {
     int nthreads = 6;
     Thread[] threads = new Thread[nthreads];
     for (int i = 0; i < nthreads; i++) {
@@ -159,14 +157,14 @@ public class UniformLoadBalanceExample {
     }
   }
 
-  public static String[] sqlQueries = new String[]{
+  protected static String[] sqlQueries = new String[]{
     "Select AGENT_NAME, COMMISSION from AGENTS",
     "Select max(COMMISSION) from AGENTS",
     "Select PHONE_NO from AGENTS",
     "Select WORKING_AREA from AGENTS"
   };
 
-  public static void runSomeSqlQueries(Connection connection) {
+  protected static void runSomeSqlQueries(Connection connection) {
     try {
       for (int i = 0; i < sqlQueries.length; i++) {
         Statement statement = connection.createStatement();
@@ -198,7 +196,7 @@ public class UniformLoadBalanceExample {
   }
 
 
-  static void makeSomeNewConnections(int new_connections) {
+  protected static void makeSomeNewConnections(int new_connections) {
     System.out.println("Creating " + new_connections + " new connections....");
     try {
       for (int i = 1; i <= new_connections; i++) {
@@ -211,7 +209,7 @@ public class UniformLoadBalanceExample {
     }
   }
 
-  public static void continueScript(String flagValue) {
+  protected static void continueScript(String flagValue) {
     FileWriter fileWriter = null;
     try {
       fileWriter = new FileWriter(".notify_shell_script");
@@ -222,7 +220,7 @@ public class UniformLoadBalanceExample {
     }
   }
 
-  static void pauseApp(String s) {
+  protected static void pauseApp(String s) {
     try {
       System.in.read();
     } catch (IOException e) {
