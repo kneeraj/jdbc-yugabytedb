@@ -82,6 +82,8 @@ public class UniformLoadBalanceExample {
       }
 
       continueScript("flag1");
+
+      //it will pause this java app till adding a node is done in cluster by shell script, for user-interaction if required based on the options provided while executing the script
       pauseApp(".jdbc_example_app_checker");
 
       makeSomeNewConnections(7);
@@ -95,6 +97,8 @@ public class UniformLoadBalanceExample {
       }
 
       continueScript("flag2");
+
+      //it will pause this java app till stopping a node is done in cluster by shell script and for user-interaction if required based on the options provided while executing the script
       pauseApp(".jdbc_example_app_checker2");
 
       makeSomeNewConnections(4);
@@ -109,6 +113,7 @@ public class UniformLoadBalanceExample {
 
       continueScript("flag3");
 
+      //it will pause this java app for user-interaction if required based on the options provided while executing the script
       pauseApp(".jdbc_example_app_checker3");
       System.out.println("Closing the java app...");
       hikariDataSource.close();
